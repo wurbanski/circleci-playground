@@ -1,0 +1,47 @@
+version: 2.1
+
+parameters:
+  run_workflow:
+    type: boolean
+    default: false
+
+jobs:
+  say_hi:
+    docker:
+      - image: alpine:3.10
+    steps:
+      - run:
+          name: Don't be shy
+          command: echo "Hi!"
+
+  say_bye:
+    docker:
+      - image: alpine:3.10
+    steps:
+      - run:
+          name: It was nice to see you
+          command: echo "Bye bye!"
+
+workflows:
+  version: 2
+  every_commit:
+    jobs:
+      - say_hi
+
+  periodic:
+    triggers:
+      - schedule:
+          cron: "0 12 * * 5"
+          filters:
+            branches:
+              only:
+                - master
+    jobs: &periodic-jobs
+      - say_hi
+      - say_bye:
+          requires:
+            - say_hi
+
+  periodic_manual:
+    when: << pipeline.parameters.run_workflow >>
+    jobs: *periodic-jobs
